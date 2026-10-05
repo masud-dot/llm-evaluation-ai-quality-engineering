@@ -33,45 +33,66 @@ jobs:
   gate:
     needs: core-tests
     runs-on: ubuntu-latest
+    outputs:
+      ran: ${{ steps.baseline.outputs.ready }}
     env:
       AIQE_MODE: replay        # no provider calls, no API keys
     steps:
       - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@v10.1.0
+      # The gate replays recordings against a committed baseline.
+      # Until the first Compass recording is made there is nothing
+      # to compare, so the gate is skipped and says so.
+      - name: Check for a recorded baseline
+        id: baseline
+        run: |
+          if [ -f baselines/current/manifest.json ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Quality gate skipped::No baselines/current/manifest.json yet. Record Compass fixtures and commit a baseline to enable the gate."
+          fi
+      - if: steps.baseline.outputs.ready == 'true'
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           version: "0.11.7"
           python-version: "3.12"
           activate-environment: true
-      - run: >
+      - if: steps.baseline.outputs.ready == 'true'
+        run: >
           uv pip install
           -r requirements/lock-core-providers-dev.txt
-      - run: uv pip install --no-deps -e .
+      - if: steps.baseline.outputs.ready == 'true'
+        run: uv pip install --no-deps -e .
       - name: Fingerprint the system
+        if: steps.baseline.outputs.ready == 'true'
         run: >
           python -m aiqe.ci manifest
           --config aiqe-manifest.toml
           --out build/manifest.json
       - name: Route the change
+        if: steps.baseline.outputs.ready == 'true'
         run: >
           python -m aiqe.ci plan
           --base baselines/current/manifest.json
           --head build/manifest.json
           --out build/impact.json
       - name: Run routed suites from recordings
+        if: steps.baseline.outputs.ready == 'true'
         run: >
           python projects/p4-ci-quality-gates/run_suites.py
           --impact build/impact.json --tier pr
           --evidence build/evidence.json
       - name: Apply the pull-request policy
+        if: steps.baseline.outputs.ready == 'true'
         run: >
           python -m aiqe.ci gate
           --policy gates/compass-pr.toml
           --evidence build/evidence.json
           --overrides gates/overrides
           --report build/report.md
-      - if: always()
+      - if: always() && steps.baseline.outputs.ready == 'true'
         uses: actions/upload-artifact@v7.0.1
         with:
           name: quality-gate
@@ -80,7 +101,8 @@ jobs:
   comment:
     needs: gate
     if: >-
-      always() && github.event_name == 'pull_request' &&
+      always() && needs.gate.outputs.ran == 'true' &&
+      github.event_name == 'pull_request' &&
       github.event.pull_request.head.repo.full_name ==
       github.repository
     runs-on: ubuntu-latest

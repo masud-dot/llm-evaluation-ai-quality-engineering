@@ -6,7 +6,6 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, "scripts")
-import make_figures  # noqa: E402
 import record_fixtures  # noqa: E402
 
 
@@ -35,6 +34,8 @@ def test_stub_recording_then_replay(tmp_path: Path) -> None:
 
 
 def test_figures_refuse_missing_input(tmp_path: Path) -> None:
+    pytest.importorskip("matplotlib")   # the book-only figures extra
+    import make_figures
     with pytest.raises(SystemExit):
         make_figures.main(["--confusion",
                            str(tmp_path / "nope.json"),
@@ -42,6 +43,8 @@ def test_figures_refuse_missing_input(tmp_path: Path) -> None:
 
 
 def test_figures_from_recorded_evidence(tmp_path: Path) -> None:
+    pytest.importorskip("matplotlib")   # the book-only figures extra
+    import make_figures
     (tmp_path / "c.json").write_text(json.dumps(
         {"tp": 57, "fn": 3, "fp": 12, "tn": 18, "deferred": 2}))
     (tmp_path / "t.json").write_text(json.dumps(
