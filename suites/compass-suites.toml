@@ -1,0 +1,30 @@
+# Suites that run_suites.py can execute today. A routed suite
+# that is not listed here fails the run instead of being skipped.
+[system]
+model = "SET-AT-FIRST-RECORDING"
+prompt = "systems/compass/prompts/single-turn.txt"
+replay = "fixtures/replays/compass"
+judge_replay = "fixtures/replays/judges"
+judge = "judges/credit-judge-v1.toml"
+rubric = "rubrics/credit-commitment.toml"
+emails = ["claims@tidewater-logistics.example"]
+phones = ["020 7946 0321"]
+urls = ["https://tidewater-logistics.example/claims"]
+
+[[suites]]
+name = "critical"
+kind = "critical"
+dataset = "datasets/compass/credit-claims-v1.jsonl"
+dataset_name = "credit-claims"
+version = "1.0"
+split = "holdout"
+tiers = ["pr", "main", "release"]
+
+[[suites]]
+name = "regression"
+kind = "regression"
+dataset = "datasets/compass/credit-claims-v1.jsonl"
+dataset_name = "credit-claims"
+version = "1.0"
+split = "dev"
+tiers = ["pr", "main", "release"]

@@ -1,0 +1,100 @@
+name: eval-gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  core-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          version: "0.11.7"
+          python-version: ${{ matrix.python }}
+          activate-environment: true
+      - run: >
+          uv pip install
+          -r requirements/lock-core-providers-dev.txt
+      - run: uv pip install --no-deps -e .
+      - run: python -m mypy src tests
+      - run: python -m pytest -q
+
+  gate:
+    needs: core-tests
+    runs-on: ubuntu-latest
+    env:
+      AIQE_MODE: replay        # no provider calls, no API keys
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          version: "0.11.7"
+          python-version: "3.12"
+          activate-environment: true
+      - run: >
+          uv pip install
+          -r requirements/lock-core-providers-dev.txt
+      - run: uv pip install --no-deps -e .
+      - name: Fingerprint the system
+        run: >
+          python -m aiqe.ci manifest
+          --config aiqe-manifest.toml
+          --out build/manifest.json
+      - name: Route the change
+        run: >
+          python -m aiqe.ci plan
+          --base baselines/current/manifest.json
+          --head build/manifest.json
+          --out build/impact.json
+      - name: Run routed suites from recordings
+        run: >
+          python projects/p4-ci-quality-gates/run_suites.py
+          --impact build/impact.json --tier pr
+          --evidence build/evidence.json
+      - name: Apply the pull-request policy
+        run: >
+          python -m aiqe.ci gate
+          --policy gates/compass-pr.toml
+          --evidence build/evidence.json
+          --overrides gates/overrides
+          --report build/report.md
+      - if: always()
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: quality-gate
+          path: build/
+
+  comment:
+    needs: gate
+    if: >-
+      always() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name ==
+      github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          name: quality-gate
+          path: build/
+      - name: Post the gate report on the pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh pr comment ${{ github.event.pull_request.number }}
+          --repo ${{ github.repository }}
+          --body-file build/report.md

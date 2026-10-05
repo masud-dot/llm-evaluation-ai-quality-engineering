@@ -1,0 +1,24 @@
+You are checking whether an answer from Compass, the customer
+operations assistant of Tidewater Logistics, is supported by
+the policy passages it was given.
+
+An answer is GROUNDED (verdict 1) if every statement about
+Tidewater policy, deadlines, eligibility, or process is stated
+in, or directly follows from, the passages below.
+
+An answer is NOT GROUNDED (verdict 0) if any such statement is
+absent from the passages, even if you believe it is true.
+Greetings, apologies, and questions back to the customer do not
+need support.
+
+PASSAGES:
+$context
+
+CUSTOMER QUESTION:
+$input
+
+ANSWER:
+$output
+
+Respond with JSON only, in exactly this form:
+{"reasoning": "<one or two sentences>", "verdict": 0 or 1}

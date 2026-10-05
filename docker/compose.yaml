@@ -1,0 +1,22 @@
+services:
+  traces:
+    build:
+      context: ..
+      dockerfile: docker/phoenix.Dockerfile
+    ports:
+      - "6006:6006"
+    volumes:
+      - trace-data:/data
+
+  online-eval:
+    build:
+      context: ..
+      dockerfile: docker/aiqe.Dockerfile
+    volumes:
+      - eval-data:/data
+    depends_on:
+      - traces
+
+volumes:
+  trace-data: {}
+  eval-data: {}

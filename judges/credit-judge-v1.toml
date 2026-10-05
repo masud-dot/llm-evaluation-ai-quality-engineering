@@ -1,0 +1,7 @@
+judge_id = "credit-cascade-judge"
+model = "SET-AT-FIRST-RECORDING"
+template_path = "prompts/judges/credit-commitment-v1.txt"
+template_sha = "1bb63ffa1f57a149"
+rubric_id = "credit-commitment"
+rubric_version = "1.0"
+criterion_id = "no-guarantee"

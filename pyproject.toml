@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling==1.32.3"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aiqe"
+version = "1.0.0"
+description = "Reader-owned AI quality engineering toolkit"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic==2.13.5",
+    "numpy==2.5.3",
+    "scipy==1.18.1",
+    "statsmodels==0.15.0",
+    "krippendorff==0.8.2",
+    "opentelemetry-api==1.44.0",
+    "opentelemetry-sdk==1.44.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "mypy==2.3.1"]
+providers = ["openai==3.15.0", "anthropic==1.6.0"]
+platform = ["opentelemetry-exporter-otlp-proto-http==1.44.0"]
+# Book production only: redraws the figures from
+# recorded evidence.
+figures = ["matplotlib==3.11.2"]
+adapters = [
+    "deepeval==4.2.3",
+    "arize-phoenix==20.14.0",
+    "openinference-instrumentation==0.1.65",
+    "inspect-ai==0.3.265",
+]
+# Ragas is deliberately absent: it cannot share an environment
+# with openai==3.15.0. Use requirements/lock-adapter-ragas.txt.
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aiqe", "systems"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+mypy_path = "src:.:scripts:projects/p4-ci-quality-gates:projects/p5-production-platform"
+
+[[tool.mypy.overrides]]
+module = ["krippendorff", "scipy.*", "statsmodels.*"]
+ignore_missing_imports = true

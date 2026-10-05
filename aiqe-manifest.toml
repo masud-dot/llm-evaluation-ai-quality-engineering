@@ -1,0 +1,13 @@
+# Fingerprints for Compass. Model snapshots are set when the
+# first recordings are made; see docs/VERSION_LOCK.md.
+prompt = { files = ["systems/compass/prompts/*.txt"] }
+system_model = { value = "SET-AT-FIRST-RECORDING" }
+provider_sdk = { value = "openai==3.15.0;anthropic==1.6.0" }
+retriever = { files = ["systems/compass/*.py"] }
+corpus = { files = ["systems/compass/corpus/**/*.md"] }
+tools = { files = ["systems/compass/sandbox.py"] }
+judge_model = { value = "SET-AT-FIRST-RECORDING" }
+judge_template = { files = ["prompts/judges/*.txt"] }
+rubric = { files = ["rubrics/*.toml"] }
+dataset = { files = ["datasets/**/*.jsonl"] }
+sandbox = { files = ["systems/compass/sandbox.py"] }

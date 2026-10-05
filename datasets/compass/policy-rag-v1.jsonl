@@ -1,0 +1,2 @@
+{"case_id": "rag-001", "input": "How long do I have to claim for a broken item?", "objective_ids": ["OBJ-CLAIM-01"], "source": "handwritten", "split": "holdout", "reviewed": true, "tags": ["claim", "damage"], "relevant_ids": ["POL-CLM-1"]}
+{"case_id": "rag-002", "input": "My Standard parcel was late. Is there compensation?", "objective_ids": ["OBJ-CREDIT-01"], "source": "handwritten", "split": "holdout", "reviewed": true, "tags": ["credit", "standard"], "relevant_ids": ["POL-CRD-1"]}
